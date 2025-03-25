@@ -1,0 +1,17 @@
+#FROM pierrezemb/gostatic
+#CMD [ "-fallback", "index.html" ]
+#COPY ./dist/ /srv/http/
+
+# Use the pierrezemb/gostatic base image
+FROM pierrezemb/gostatic:latest
+# Create a new user and group
+RUN addgroup -S mygroup && adduser -S myuser -G mygroup
+
+# Switch to the new user
+USER myuser
+
+# Copy static files into the container and set ownership
+COPY --chown=myuser:mygroup ./dist/ /srv/http/
+
+# Set the fallback to index.html
+CMD [ "-fallback", "index.html" ]

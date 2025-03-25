@@ -1,0 +1,412 @@
+// schema.prisma
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model NewsletterSubscription {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String
+
+  tag   Tag @relation(fields: [tagId], references: [id], onDelete: Cascade)
+  tagId Int
+
+  emailConfirmed Boolean @default(false)
+
+  @@unique([userId, tagId]) // Prevent duplicate subscriptions for the same user and tag.
+}
+
+model Blog {
+  id          Int      @id @default(autoincrement())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  title       String
+  text        String?
+  tags        Tag[]    @relation("BlogTags")
+  description String   @default("")
+  isDraft     Boolean  @default(true) // NEW: isDraft field
+}
+
+model Tag {
+  id            Int                      @id @default(autoincrement())
+  name          String                   @unique
+  blogs         Blog[]                   @relation("BlogTags")
+  subscriptions NewsletterSubscription[]
+}
+
+model User {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+
+  email               String?  @unique
+  username            String?  @unique
+  lastActiveTimestamp DateTime @default(now())
+  isAdmin             Boolean  @default(false)
+
+  paymentProcessorUserId        String?   @unique
+  lemonSqueezyCustomerPortalUrl String?
+  subscriptionStatus            String?
+  subscriptionPlan              String?
+  sendNewsletter                Boolean   @default(false)
+  datePaid                      DateTime?
+  credits                       Float     @default(0)
+
+  conversations           Conversation[]
+  messages                Message[]
+  gptResponses            GptResponse[]
+  contactFormMessages     ContactFormMessage[]
+  tasks                   Task[]
+  files                   File[]
+  settings                UserSettings?
+  newsletterSubscriptions NewsletterSubscription[]
+  confirmationToken       String?
+  templates               Template[]
+  projects                Project[]
+}
+
+model UserSettings {
+  id     String @id @default(uuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  maxSilenceDuration    Int           @default(2000)
+  ttsVoices             String[]      @default(["af_alloy"]) @db.Text
+  ttsSpeed              Float         @default(1)
+  defaultSystemPromptId String?
+  defaultSystemPrompt   SystemPrompt? @relation(fields: [defaultSystemPromptId], references: [id])
+
+  positiveSpeechThreshold Float @default(0.5)
+  negativeSpeechThreshold Float @default(0.35)
+  redemptionFrames        Int   @default(8)
+  preSpeechPadFrames      Int   @default(1)
+  minSpeechFrames         Int   @default(3)
+}
+
+model Conversation {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  title String @default("New Conversation")
+
+  messages       Message[]
+  systemPromptId String?
+  systemPrompt   SystemPrompt? @relation(fields: [systemPromptId], references: [id])
+
+  whisperCost Float @default(0)
+  llmCost     Float @default(0)
+  ttsCost     Float @default(0)
+  totalCost   Float @default(0)
+}
+
+model Message {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+
+  conversationId String
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  role    String
+  content String
+
+  userId String?
+  user   User?   @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model SystemPrompt {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+
+  title  String
+  prompt String
+
+  conversations Conversation[]
+  UserSettings  UserSettings[]
+}
+
+model GptResponse {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user   User   @relation(fields: [userId], references: [id])
+  userId String
+
+  content String
+}
+
+model Task {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+
+  user   User   @relation(fields: [userId], references: [id])
+  userId String
+
+  description String
+  time        String  @default("1")
+  isDone      Boolean @default(false)
+}
+
+model File {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+
+  user   User   @relation(fields: [userId], references: [id])
+  userId String
+
+  name      String
+  type      String
+  key       String
+  uploadUrl String
+}
+
+model DailyStats {
+  id   Int      @id @default(autoincrement())
+  date DateTime @unique @default(now())
+
+  totalViews                Int    @default(0)
+  prevDayViewsChangePercent String @default("0")
+  userCount                 Int    @default(0)
+  paidUserCount             Int    @default(0)
+  userDelta                 Int    @default(0)
+  paidUserDelta             Int    @default(0)
+  totalRevenue              Float  @default(0)
+  totalProfit               Float  @default(0)
+
+  sources PageViewSource[]
+}
+
+model PageViewSource {
+  name String
+  date DateTime @default(now())
+
+  dailyStats   DailyStats? @relation(fields: [dailyStatsId], references: [id])
+  dailyStatsId Int?
+
+  visitors Int
+
+  @@id([date, name])
+}
+
+model Logs {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+
+  message String
+  level   String
+}
+
+model ContactFormMessage {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+
+  user   User   @relation(fields: [userId], references: [id])
+  userId String
+
+  content   String
+  isRead    Boolean   @default(false)
+  repliedAt DateTime?
+}
+
+// ---------------------------
+// New AI Coding Project Models
+// ---------------------------
+
+model Template {
+  id          String   @id @default(uuid())
+  name        String
+  description String?
+  readme      String?
+  isPublic    Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user   User   @relation(fields: [userId], references: [id])
+  userId String
+
+  features MindMapFeature[]
+  projects Project[]
+  rules   Rule[]
+  generalSettings GeneralSettings? // Add this line
+}
+
+model GeneralSettings {
+  id          String    @id @default(uuid())
+  name        String    @default("General Settings")
+  description String?   @default("Global settings within this blueprint.")
+  
+  // Relationship to Template (one-to-one)
+  template   Template  @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  templateId String    @unique
+
+    // Settings that can be used as variables across all MindMapFeatures
+  settings    Setting[]
+  values FeatureSettingValue[] 
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+
+model MindMapFeature {
+  id          String    @id @default(uuid())
+  name        String
+  description String?
+  settings    Setting[] 
+
+  // Back-references for connection triggers
+  featureOneRules Rule[] @relation("FeatureOneRelation") // Rules where this feature is the first connection point
+  featureTwoRules Rule[] @relation("FeatureTwoRelation") // Rules where this feature is the second connection point
+
+  // Back-reference for action target
+  targetedByActions Rule[] // Rules where this feature is the action target
+
+  template   Template? @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  templateId String?
+
+  createdAt      DateTime         @default(now())
+  updatedAt   DateTime   @updatedAt
+  projectFeatures ProjectFeature[] @relation("FeatureTypeRelation")
+}
+
+model Setting {
+  id          String         @id @default(uuid())
+  key         String
+  type        String         // 'boolean', 'string', or 'select'
+  default     String?        // Default value for the setting
+  description String?
+  showInMindMap Boolean @default(false)
+  
+  // Optional relationship to MindMapFeature
+  feature     MindMapFeature? @relation(fields: [featureId], references: [id], onDelete: Cascade)
+  featureId   String?         // Optional foreign key to MindMapFeature
+
+  // Optional relationship to GeneralSettings
+  generalSetting GeneralSettings? @relation(fields: [generalSettingId], references: [id], onDelete: Cascade)
+  generalSettingId String?    // Optional foreign key to GeneralSettings
+
+  options     SelectOption[] @relation("SettingOptions")
+  featureSettingValues FeatureSettingValue[]
+  createdAt   DateTime       @default(now())
+
+  // Back-relation to Rule (no fields/references here)
+  rules       Rule[]
+
+  // Ensure that either featureId or generalSettingId is set, but not both
+  //@@unique([featureId, generalSettingId])
+}
+
+model SelectOption {
+  id        String   @id @default(uuid())
+  value     String
+  setting   Setting  @relation("SettingOptions", fields: [settingId], references: [id], onDelete: Cascade)
+  settingId String
+  createdAt DateTime @default(now())
+}
+
+model Project {
+  id        String   @id @default(uuid())
+  name      String
+  createdAt DateTime @default(now())
+  description String?
+  updatedAt DateTime @updatedAt
+  isPublic    Boolean  @default(false)
+
+  user   User   @relation(fields: [userId], references: [id])
+  userId String
+
+  template   Template @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  templateId String
+
+  features ProjectFeature[]
+}
+
+model ProjectFeature {
+  id             String         @id @default(uuid())
+  project        Project        @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  projectId      String
+  prompt String?
+  featureType    MindMapFeature @relation(fields: [featureTypeId], references: [id], name: "FeatureTypeRelation", onDelete: Cascade)
+  featureTypeId  String
+  settings       FeatureSettingValue[]
+  sourceConnections Connection[] @relation("source")
+  targetConnections Connection[] @relation("target")
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+}
+
+model FeatureSettingValue {
+  id               String         @id @default(uuid())
+  projectFeature   ProjectFeature? @relation(fields: [projectFeatureId], references: [id], onDelete: Cascade)
+  projectFeatureId String?
+  generalSetting GeneralSettings? @relation(fields: [generalSettingId], references: [id], onDelete: Cascade)
+  generalSettingId String?
+  setting          Setting        @relation(fields: [settingId], references: [id], onDelete: Cascade)
+  settingId        String
+  value            String           // true,false for boolean, string for string, optionId for select
+
+  //@@unique([projectFeatureId, settingId])
+}
+// 
+model Connection {
+  id              String          @id @default(uuid())
+  source          ProjectFeature  @relation("source", fields: [sourceId], references: [id], onDelete: Cascade)
+  sourceId        String
+  target          ProjectFeature  @relation("target", fields: [targetId], references: [id], onDelete: Cascade)
+  targetId        String
+  relationType    String
+  createdAt       DateTime        @default(now())
+
+  @@unique([sourceId, targetId])
+  @@unique([targetId, sourceId]) // Ensure reverse order is also unique
+}
+
+model Rule {
+  id          String  @id @default(uuid())
+  name        String
+  description String?
+  priority    Int     @default(0)
+  template    Template @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  templateId  String
+
+  triggerType  String // 'SETTING' or 'CONNECTION' or 'ALWAYS'
+
+  // For SETTING triggers:
+  triggerOperator   String? // for SETTING triggerType, "==", "!=", "contains",
+  triggerValue String? // Value to compare against
+  // We refer to the setting here, which will be used to check the trigger. So the set value of the setting will be used to check the trigger
+  setting   Setting? @relation(fields: [settingId], references: [id])
+  settingId String?  // Foreign key to Setting
+
+  // For CONNECTION triggers:
+  // If the triggerType is CONNECTION, then we will check if the connection exists, if so we do the action
+  mindmapFeatureOne MindMapFeature? @relation("FeatureOneRelation", fields: [mindmapFeatureOneId], references: [id], onDelete: Cascade)
+  mindmapFeatureOneId String?
+  mindmapFeatureTwo MindMapFeature? @relation("FeatureTwoRelation", fields: [mindmapFeatureTwoId], references: [id], onDelete: Cascade)
+  mindmapFeatureTwoId String?
+
+  // Actions to perform when the rule triggers, must be present!
+  actionText      String // The prompt text to add
+  actionTarget    MindMapFeature @relation(fields: [actionFeatureId], references: [id], onDelete: Cascade) // The target feature to add the prompt to,if applicable. Should be there.
+  actionFeatureId String // Foreign key to the target MindMapFeature
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+
+//end region 
+
+// Feedback model
+model Feedback {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+  content String
+}
