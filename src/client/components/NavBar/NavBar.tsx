@@ -6,7 +6,7 @@ import { useState, useEffect } from 'react';
 import { Menu, X } from 'lucide-react';
 import { Button } from '../../../components/ui/button';
 import { cn } from '../../../lib/utils';
-import { Logo } from '../../../components/logo';
+import logoUrl from '../../../../public/logo.png';
 import { logout } from 'wasp/client/auth';
 
 // Export the NavigationItem type for use in other components
@@ -19,6 +19,11 @@ export interface NavigationItem {
 const navigationItems: NavigationItem[] = [
   { name: 'Projects', to: '/projects' },
   { name: 'Blueprints', to: '/view-blueprints' },
+];
+
+// Define always-visible navigation items
+const alwaysVisibleItems: NavigationItem[] = [
+  { name: 'Pricing', to: '/pricing' },
 ];
 
 export default function NavBar() {
@@ -34,6 +39,9 @@ export default function NavBar() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  const { LandingPageRoute } = routes; // Destructure routes if used elsewhere
+
+  const logoLinkClasses = "flex items-center space-x-2"; // Define classes
   return (
     <>
       <header className="h-1">
@@ -45,12 +53,14 @@ export default function NavBar() {
             <div className="relative flex flex-wrap items-center justify-between gap-6 py-3 lg:gap-0 lg:py-4">
               {/* Logo Section */}
               <div className="flex w-full justify-between lg:w-auto">
-                <Link
-                  to={routes.LandingPageRoute.to}
-                  aria-label="home"
-                  className="flex items-center space-x-2">
-                  <Logo />
-                </Link>
+      <Link
+        to={LandingPageRoute.to} // Shorter with destructuring
+        aria-label="home"
+        className={logoLinkClasses} // Use class string
+      >
+        <img src={logoUrl} alt="Logo" style={{ width: '40px', height: '40px' }} />
+      </Link>
+
 
                 {user && (
                   <button
@@ -65,22 +75,20 @@ export default function NavBar() {
                 )}
               </div>
 
-              {/* Desktop Navigation - Only show when user is logged in */}
-              {user && (
-                <div className="absolute inset-0 m-auto hidden size-fit lg:block">
-                  <ul className="flex gap-8 text-sm">
-                    {navigationItems.map((item, index) => (
-                      <li key={index}>
-                        <Link
-                          to={item.to}
-                          className="text-muted-foreground hover:text-accent-foreground block duration-150">
-                          <span>{item.name}</span>
-                        </Link>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
+              {/* Combined Navigation Items */}
+              <div className="absolute inset-0 m-auto hidden size-fit lg:block">
+                <ul className="flex gap-8 text-sm">
+                  {alwaysVisibleItems.concat(user ? navigationItems : []).map((item, index) => (
+                    <li key={index}>
+                      <Link
+                        to={item.to}
+                        className="text-muted-foreground hover:text-accent-foreground block duration-150">
+                        <span>{item.name}</span>
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </div>
 
               {/* Mobile Menu & Auth Buttons */}
               <div className={cn(
@@ -91,6 +99,15 @@ export default function NavBar() {
                 {user && (
                   <div className="lg:hidden">
                     <ul className="space-y-6 text-base">
+                      {alwaysVisibleItems.map((item, index) => (
+                        <li key={index}>
+                          <Link
+                            to={item.to}
+                            className="text-muted-foreground hover:text-accent-foreground block duration-150">
+                            <span>{item.name}</span>
+                          </Link>
+                        </li>
+                      ))}
                       {navigationItems.map((item, index) => (
                         <li key={index}>
                           <Link

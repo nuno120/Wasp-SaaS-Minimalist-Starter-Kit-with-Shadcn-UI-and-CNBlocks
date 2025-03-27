@@ -1,6 +1,6 @@
 import { Link as WaspRouterLink, routes } from 'wasp/client/router';
 import { SignupForm } from 'wasp/client/auth';
-import { Logo } from '../components/logo';
+import logoUrl from '../../public/logo.png'
 import type { CustomizationOptions } from 'wasp/client/auth';
 
 const appearance: CustomizationOptions['appearance'] = {
@@ -32,7 +32,7 @@ export function Signup() {
                 <div className="bg-card -m-px rounded-[calc(var(--radius)+.125rem)] border p-8 pb-6">
                     <div className="text-center">
                         <a href="/" aria-label="go home" className="mx-auto block w-fit">
-                            <Logo />
+                            <img src={logoUrl} alt="Logo" />
                         </a>
                         <h1 className="mb-1 mt-4 text-xl font-semibold">Sign Up</h1>
                         <p className="text-sm">Create your account to get started</p>
