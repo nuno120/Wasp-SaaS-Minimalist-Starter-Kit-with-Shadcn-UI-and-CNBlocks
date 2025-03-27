@@ -29,6 +29,7 @@ const alwaysVisibleItems: NavigationItem[] = [
 export default function NavBar() {
   const [menuState, setMenuState] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { data: user, isLoading: isUserLoading } = useAuth();
 
   useEffect(() => {
@@ -53,26 +54,24 @@ export default function NavBar() {
             <div className="relative flex flex-wrap items-center justify-between gap-6 py-3 lg:gap-0 lg:py-4">
               {/* Logo Section */}
               <div className="flex w-full justify-between lg:w-auto">
-      <Link
-        to={LandingPageRoute.to} // Shorter with destructuring
-        aria-label="home"
-        className={logoLinkClasses} // Use class string
-      >
-        <img src={logoUrl} alt="Logo" style={{ width: '40px', height: '40px' }} />
-      </Link>
+                <Link
+                  to={LandingPageRoute.to} // Shorter with destructuring
+                  aria-label="home"
+                  className={logoLinkClasses} // Use class string
+                >
+                  <img src={logoUrl} alt="Logo" style={{ width: '40px', height: '40px' }} />
+                </Link>
 
-
-                {user && (
-                  <button
-                    onClick={() => setMenuState(!menuState)}
-                    aria-label={menuState ? 'Close Menu' : 'Open Menu'}
-                    className="relative z-20 -m-2.5 -mr-4 block cursor-pointer p-2.5 lg:hidden">
-                    <Menu className={cn("m-auto size-6 duration-200", 
-                      menuState && "rotate-180 scale-0 opacity-0")} />
-                    <X className={cn("absolute inset-0 m-auto size-6 -rotate-180 duration-200",
-                      menuState ? "rotate-0 scale-100 opacity-100" : "scale-0 opacity-0")} />
-                  </button>
-                )}
+                {/* Mobile Menu Button - Always visible */}
+                <button
+                  onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                  aria-label={isMobileMenuOpen ? 'Close Menu' : 'Open Menu'}
+                  className="relative z-20 -m-2.5 -mr-4 block cursor-pointer p-2.5 lg:hidden">
+                  <Menu className={cn("m-auto size-6 duration-200", 
+                    isMobileMenuOpen && "rotate-180 scale-0 opacity-0")} />
+                  <X className={cn("absolute inset-0 m-auto size-6 -rotate-180 duration-200",
+                    isMobileMenuOpen ? "rotate-0 scale-100 opacity-100" : "scale-0 opacity-0")} />
+                </button>
               </div>
 
               {/* Combined Navigation Items */}
@@ -92,66 +91,59 @@ export default function NavBar() {
 
               {/* Mobile Menu & Auth Buttons */}
               <div className={cn(
-                "bg-background absolute right-6 top-16 mb-6 w-[calc(100%-3rem)] flex-wrap items-center justify-end space-y-8 rounded-3xl border p-6 shadow-2xl shadow-zinc-300/20 md:flex-nowrap lg:static lg:m-0 lg:flex lg:w-fit lg:gap-6 lg:space-y-0 lg:border-transparent lg:bg-transparent lg:p-0 lg:shadow-none dark:shadow-none dark:lg:bg-transparent",
-                menuState ? "block" : "hidden lg:flex"
+                "bg-background fixed inset-0 top-[65px] z-50 flex flex-col items-center justify-start overflow-y-auto py-8 lg:relative lg:inset-auto lg:top-0 lg:z-auto lg:flex lg:w-fit lg:flex-row lg:items-center lg:gap-6 lg:py-0 lg:bg-transparent",
+                isMobileMenuOpen ? "block" : "hidden lg:flex"
               )}>
-                {/* Mobile Navigation - Only show when user is logged in */}
-                {user && (
-                  <div className="lg:hidden">
-                    <ul className="space-y-6 text-base">
-                      {alwaysVisibleItems.map((item, index) => (
-                        <li key={index}>
-                          <Link
-                            to={item.to}
-                            className="text-muted-foreground hover:text-accent-foreground block duration-150">
-                            <span>{item.name}</span>
-                          </Link>
-                        </li>
-                      ))}
-                      {navigationItems.map((item, index) => (
-                        <li key={index}>
-                          <Link
-                            to={item.to}
-                            className="text-muted-foreground hover:text-accent-foreground block duration-150">
-                            <span>{item.name}</span>
-                          </Link>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
+                {/* Mobile Navigation - Always show when menu is open */}
+                <div className="w-full px-6 lg:hidden">
+                  <ul className="space-y-6 text-base">
+                    {alwaysVisibleItems.map((item, index) => (
+                      <li key={index}>
+                        <Link
+                          onClick={() => setIsMobileMenuOpen(false)}
+                          to={item.to}
+                          className="text-muted-foreground hover:text-accent-foreground block duration-150 text-lg">
+                          <span>{item.name}</span>
+                        </Link>
+                      </li>
+                    ))}
+                    {user && navigationItems.map((item, index) => (
+                      <li key={index}>
+                        <Link
+                          onClick={() => setIsMobileMenuOpen(false)}
+                          to={item.to}
+                          className="text-muted-foreground hover:text-accent-foreground block duration-150 text-lg">
+                          <span>{item.name}</span>
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
 
                 {/* Auth Buttons */}
-                <div className="flex w-full flex-col space-y-3 sm:flex-row sm:gap-3 sm:space-y-0 md:w-fit">
+                <div className="mt-8 flex w-full flex-col space-y-3 px-6 sm:flex-row sm:gap-3 sm:space-y-0 md:w-fit lg:mt-0 lg:px-0">
                   {isUserLoading ? null : !user ? (
                     <>
-                      {/* Login/Signup buttons - visible when not scrolled */}
-                      <div className={cn("flex gap-3 transition-all duration-300",
-                        isScrolled ? "lg:hidden lg:opacity-0" : "lg:flex lg:opacity-100")}>
+                      {/* Login/Signup buttons - Only show on desktop or when not scrolled */}
+                      <div className={cn("flex w-full flex-col gap-3 sm:flex-row transition-all duration-300",
+                        isScrolled ? "lg:hidden" : "lg:flex")}> 
                         <Button
+                          onClick={() => setIsMobileMenuOpen(false)}
                           asChild
                           variant="outline"
-                          size="sm">
+                          size="sm"
+                          className="w-full sm:w-auto">
                           <Link to={routes.LoginRoute.to}>
                             <span>Login</span>
                           </Link>
                         </Button>
                         <Button
+                          onClick={() => setIsMobileMenuOpen(false)}
                           asChild
-                          size="sm">
+                          size="sm"
+                          className="w-full sm:w-auto">
                           <Link to={routes.SignupRoute.to}>
-                            <span>Sign Up</span>
-                          </Link>
-                        </Button>
-                      </div>
-                      {/* Get Started button - visible when scrolled */}
-                      <div className={cn("transition-all duration-300",
-                        isScrolled ? "lg:flex lg:opacity-100" : "lg:hidden lg:opacity-0")}>
-                        <Button
-                          asChild
-                          size="sm">
-                          <Link to={routes.SignupRoute.to}>
-                            <span>Get Started</span>
+                            <span>{isScrolled ? "Get Started" : "Sign Up"}</span>
                           </Link>
                         </Button>
                       </div>
@@ -159,17 +151,21 @@ export default function NavBar() {
                   ) : (
                     <>
                       <Button
+                        onClick={() => setIsMobileMenuOpen(false)}
                         asChild
                         size="sm"
-                        variant="outline">
+                        variant="outline"
+                        className="w-full sm:w-auto">
                         <Link to={routes.AccountRoute.to}>
                           <span>Account</span>
                         </Link>
                       </Button>
                       {user.isAdmin && (
                         <Button
+                          onClick={() => setIsMobileMenuOpen(false)}
                           asChild
-                          size="sm">
+                          size="sm"
+                          className="w-full sm:w-auto">
                           <Link to={routes.AdminRoute.to}>
                             <span>Admin</span>
                           </Link>
@@ -178,7 +174,11 @@ export default function NavBar() {
                       <Button
                         size="sm"
                         variant="ghost"
-                        onClick={() => logout()}>
+                        onClick={() => {
+                          setIsMobileMenuOpen(false);
+                          logout();
+                        }}
+                        className="w-full sm:w-auto"> 
                         Logout
                       </Button>
                     </>
