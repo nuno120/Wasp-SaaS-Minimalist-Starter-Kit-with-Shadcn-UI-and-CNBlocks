@@ -1,23 +1,23 @@
-app NunosLifeBlog {
+app OpenSaaS {
   wasp: {
     version: "^0.16.0"
   },
 
-  title: "Nunos Life: Reflections on Software, Life, and Everything In Between",
+  title: "My Open SaaS App",
 
   head: [
     "<meta charset='utf-8' />",
-    "<meta name='description' content='Nuno&apos;s Life: A blog exploring software development, personal growth, and the intersection of technology and life. Join the journey!' />",
-    "<meta name='author' content='Nuno' />",
-    "<meta name='keywords' content='software development, programming, personal growth, life lessons, technology, blog, nunoslife, nuno, scholten, nuno scholten' />",
-
+    "<meta name='description' content='Your apps main description and features.' />",
+    "<meta name='author' content='Your (App) Name' />",
+    "<meta name='keywords' content='saas, solution, product, app, service' />",
+    
     "<meta property='og:type' content='website' />",
-    "<meta property='og:title' content='Nunos Life: Reflections on Software, Life, and Everything In Between' />",
-    "<meta property='og:site_name' content='Nunos Life' />",
-    "<meta property='og:url' content='https://nunos.life' />",  // Replace with your actual domain
-    "<meta property='og:description' content='Nunos Life: A blog exploring software development, personal growth, and the intersection of technology and life.' />",
-    "<meta property='og:image' content='https://nunos.life/public-banner.webp' />", // Replace with your actual banner image. Make sure it's under /public folder.
-    "<meta name='twitter:image' content='https://nunos.life/public-banner.webp' />", // Replace with your actual banner image.  Make sure it's under /public folder.
+    "<meta property='og:title' content='Your Open SaaS App' />",
+    "<meta property='og:site_name' content='Your Open SaaS App' />",
+    "<meta property='og:url' content='https://your-saas-app.com' />",
+    "<meta property='og:description' content='Your apps main description and features.' />",
+    "<meta property='og:image' content='https://your-saas-app.com/public-banner.webp' />",
+    "<meta name='twitter:image' content='https://your-saas-app.com/public-banner.webp' />",
     "<meta name='twitter:image:width' content='800' />",
     "<meta name='twitter:image:height' content='400' />",
     "<meta name='twitter:card' content='summary_large_image' />",
@@ -25,11 +25,11 @@ app NunosLifeBlog {
     // NOTE: Plausible does not use Cookies, so you can simply add the scripts here.
     // Google, on the other hand, does, so you must instead add the script dynamically
     // via the Cookie Consent component after the user clicks the "Accept" cookies button.
-    "<script defer src='https://plausible.nunos.life/script.js' data-website-id='d6991925-1259-4233-8573-52b4f0f7ae18'></script>",  // for production
-    "<script defer data-domain='localhost' src='http://plausible.nunos.life/js/script.js'></script>",  // for development. Chnage to actual url.
+    "<script defer data-domain='<your-site-id>' src='https://plausible.io/js/script.js'></script>",  // for production
+    "<script defer data-domain='<your-site-id>' src='https://plausible.io/js/script.local.js'></script>",  // for development
   ],
 
-  // 🔐 Auth out of the box! https://wasp-lang.dev/docs/auth/overview
+  // 🔐 Auth out of the box! https://wasp.sh/docs/auth/overview
   auth: {
     userEntity: User,
     methods: {
@@ -37,8 +37,8 @@ app NunosLifeBlog {
       //   (RequestPasswordReset(Route|Page), PasswordReset(Route|Page), EmailVerification(Route|Page))
       email: {
         fromField: {
-          name: "Nuno's Life",
-          email: "noreply@nunos.life" // Change to your domain
+          name: "Open SaaS App",
+          email: "me@example.com"
         },
         emailVerification: {
           clientRoute: EmailVerificationRoute,
@@ -50,25 +50,24 @@ app NunosLifeBlog {
         },
         userSignupFields: import { getEmailUserFields } from "@src/auth/userSignupFields",
       },
-      // Uncomment to enable Google Auth (check https://wasp-lang.dev/docs/auth/social-auth/google for setup instructions):
+      // Uncomment to enable Google Auth (check https://wasp.sh/docs/auth/social-auth/google for setup instructions):
       // google: { // Guide for setting up Auth via Google
       //   userSignupFields: import { getGoogleUserFields } from "@src/auth/userSignupFields",
       //   configFn: import { getGoogleAuthConfig } from "@src/auth/userSignupFields",
       // },
-      // Uncomment to enable GitHub Auth (check https://wasp-lang.dev/docs/auth/social-auth/github for setup instructions):
+      // Uncomment to enable GitHub Auth (check https://wasp.sh/docs/auth/social-auth/github for setup instructions):
       // gitHub: {
       //   userSignupFields: import { getGitHubUserFields } from "@src/auth/userSignupFields",
       //   configFn: import { getGitHubAuthConfig } from "@src/auth/userSignupFields",
       // },
-      // Uncomment to enable Discord Auth (check https://wasp-lang.dev/docs/auth/social-auth/discord for setup instructions):
+      // Uncomment to enable Discord Auth (check https://wasp.sh/docs/auth/social-auth/discord for setup instructions):
       // discord: {
       //   userSignupFields: import { getDiscordUserFields } from "@src/auth/userSignupFields",
       //   configFn: import { getDiscordAuthConfig } from "@src/auth/userSignupFields"
       // }
     },
-    onAfterSignup: import { onAfterSignup } from "@src/auth/hooks",
     onAuthFailedRedirectTo: "/login",
-    onAuthSucceededRedirectTo: "/",
+    onAuthSucceededRedirectTo: "/demo-app",
   },
 
   db: {
@@ -83,20 +82,17 @@ app NunosLifeBlog {
     rootComponent: import App from "@src/client/App",
   },
 
-   emailSender: {
+  emailSender: {
     // NOTE: "Dummy" provider is just for local development purposes.
     //   Make sure to check the server logs for the email confirmation url (it will not be sent to an address)!
     //   Once you are ready for production, switch to e.g. "SendGrid" or "Mailgun" providers. Check out https://docs.opensaas.sh/guides/email-sending/ .
-    provider: SMTP,
+    provider: Dummy,
     defaultFrom: {
-      name: "Nuno's Life",
-      email: "noreply@nunos.life" // Change to your domain
+      name: "Open SaaS App",
+      // When using a real provider, e.g. SendGrid, you must use the same email address that you configured your account to send out emails with!
+      email: "me@example.com"
     },
   },
- //webSocket: {
-   // fn: import { webSocketFn } from "@src/voicehomie/websocket",
-    //autoConnect: true,  // optional, default: true
-  //},
 }
 
 

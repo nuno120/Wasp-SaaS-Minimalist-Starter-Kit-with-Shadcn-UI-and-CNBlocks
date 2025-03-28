@@ -1,13 +1,12 @@
 //navbar.tsx
 import { Link } from 'react-router-dom';
 import { routes } from 'wasp/client/router';
-import { useAuth } from 'wasp/client/auth';
+import { useAuth, logout } from 'wasp/client/auth'; // Combined imports
 import { useState, useEffect } from 'react';
 import { Menu, X } from 'lucide-react';
 import { Button } from '../../../components/ui/button';
 import { cn } from '../../../lib/utils';
 import logoUrl from '../../../../public/logo.png';
-import { logout } from 'wasp/client/auth';
 
 // Export the NavigationItem type for use in other components
 export interface NavigationItem {
@@ -27,10 +26,12 @@ const alwaysVisibleItems: NavigationItem[] = [
 ];
 
 export default function NavBar() {
-  const [menuState, setMenuState] = useState(false);
+  const [menuState, setMenuState] = useState(false); // Note: menuState seems unused, maybe remove?
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const { data: user, isLoading: isUserLoading } = useAuth();
+  // isUserLoading is intentionally not used in the auth button logic below
+  // to ensure Login/Signup show immediately.
+  const { data: user /*, isLoading: isUserLoading */ } = useAuth();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -43,13 +44,14 @@ export default function NavBar() {
   const { LandingPageRoute } = routes; // Destructure routes if used elsewhere
 
   const logoLinkClasses = "flex items-center space-x-2"; // Define classes
+
   return (
     <>
       <header className="h-1">
         <nav
-          data-state={menuState ? 'active' : undefined}
+          // data-state={menuState ? 'active' : undefined} // If menuState is unused, remove this too
           className="fixed z-50 w-full px-2">
-          <div className={cn('mx-auto mt-2 max-w-6xl px-6 transition-all duration-300 lg:px-12', 
+          <div className={cn('mx-auto mt-2 max-w-6xl px-6 transition-all duration-300 lg:px-12',
             isScrolled && 'bg-background/50 max-w-4xl rounded-2xl border backdrop-blur-lg lg:px-5')}>
             <div className="relative flex flex-wrap items-center justify-between gap-6 py-3 lg:gap-0 lg:py-4">
               {/* Logo Section */}
@@ -67,7 +69,7 @@ export default function NavBar() {
                   onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
                   aria-label={isMobileMenuOpen ? 'Close Menu' : 'Open Menu'}
                   className="relative z-20 -m-2.5 -mr-4 block cursor-pointer p-2.5 lg:hidden">
-                  <Menu className={cn("m-auto size-6 duration-200", 
+                  <Menu className={cn("m-auto size-6 duration-200",
                     isMobileMenuOpen && "rotate-180 scale-0 opacity-0")} />
                   <X className={cn("absolute inset-0 m-auto size-6 -rotate-180 duration-200",
                     isMobileMenuOpen ? "rotate-0 scale-100 opacity-100" : "scale-0 opacity-0")} />
@@ -122,11 +124,12 @@ export default function NavBar() {
 
                 {/* Auth Buttons */}
                 <div className="mt-8 flex w-full flex-col space-y-3 px-6 sm:flex-row sm:gap-3 sm:space-y-0 md:w-fit lg:mt-0 lg:px-0">
-                  {isUserLoading ? null : !user ? (
+                  {/* --- MODIFICATION START --- */}
+                  {!user ? ( // Show Login/Signup if user is null/undefined (covers loading state too)
                     <>
                       {/* Login/Signup buttons - Only show on desktop or when not scrolled */}
                       <div className={cn("flex w-full flex-col gap-3 sm:flex-row transition-all duration-300",
-                        isScrolled ? "lg:hidden" : "lg:flex")}> 
+                        isScrolled ? "lg:hidden" : "lg:flex")}>
                         <Button
                           onClick={() => setIsMobileMenuOpen(false)}
                           asChild
@@ -148,7 +151,7 @@ export default function NavBar() {
                         </Button>
                       </div>
                     </>
-                  ) : (
+                  ) : ( // Show Account/Admin/Logout if user exists
                     <>
                       <Button
                         onClick={() => setIsMobileMenuOpen(false)}
@@ -178,11 +181,12 @@ export default function NavBar() {
                           setIsMobileMenuOpen(false);
                           logout();
                         }}
-                        className="w-full sm:w-auto"> 
+                        className="w-full sm:w-auto">
                         Logout
                       </Button>
                     </>
                   )}
+                  {/* --- MODIFICATION END --- */}
                 </div>
               </div>
             </div>
