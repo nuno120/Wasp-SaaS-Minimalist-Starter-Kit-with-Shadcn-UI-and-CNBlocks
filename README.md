@@ -11,26 +11,33 @@ This repository provides a streamlined starting point for building SaaS applicat
 *   **Feedback Integration:** Includes a pre-built feedback button, allowing you to easily collect user feedback and iterate on your application. This is crucial for early-stage SaaS development.
 *   **Clean and Minimal:** No unnecessary examples or boilerplate code. This template is designed to be a lean and mean starting point, allowing you to quickly add your own features and customizations.
 
+  
 ## To get started:
 
-1.  **Run the development database** (make sure to have Docker installed) (and leave it running):
+1.  **Install Wasp:** Before proceeding, ensure you have Wasp installed. You can install it by running the following command in your terminal (requires Node.js):
+    ```bash
+    curl -sSL https://get.wasp.sh/installer.sh | sh
+    ```
+    Refer to the official documentation for more details: [https://wasp.sh/docs/quick-start#requirements](https://wasp.sh/docs/quick-start#requirements)
+
+2.  **Run the development database** (make sure to have Docker installed) (and leave it running):
     ```bash
     wasp db start
     ```
 
-2.  **Open new terminal window (or tab)** in that same directory and continue in it.
+3.  **Open new terminal window (or tab)** in that same directory and continue in it.
 
-3.  **Apply initial database migrations:**
+4.  **Apply initial database migrations:**
     ```bash
     wasp db migrate-dev
     ```
 
-4.  **Create initial dot env file** from the template:
+5.  **Create initial dot env file** from the template:
     ```bash
     cp .env.server.example .env.server
     ```
 
-5.  **Last step: run the app!**
+6.  **Last step: run the app!**
     ```bash
     wasp start
     ```
